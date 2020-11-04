@@ -1,6 +1,7 @@
 package com.company.isbnvalidator;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -9,9 +10,23 @@ import static org.mockito.Mockito.*;
 
 public class StockManagerTest {
 
+    private ISBNServiceBookFetcher webService;
+    private ISBNServiceBookFetcher databaseService;
+    private StockManager manager;
+
+    @Before
+    public void setup() {
+        webService = mock(ISBNServiceBookFetcher.class);
+        databaseService = mock(ISBNServiceBookFetcher.class);
+
+        manager = new StockManager();
+        manager.setWebService(webService);
+        manager.setDatabaseService(databaseService);
+    }
+
     @Test
     public void canGetACorrectLocatorCode() {
-
+//        ** Replaced by mocks - example before and after **
 //        ISBNServiceBookFetcher webService = new ISBNServiceBookFetcher() {
 //            @Override
 //            public Book getBookInformation(String isbn) {
@@ -26,8 +41,6 @@ public class StockManagerTest {
 //            }
 //        };
 
-        ISBNServiceBookFetcher webService = mock(ISBNServiceBookFetcher.class);
-        ISBNServiceBookFetcher databaseService = mock(ISBNServiceBookFetcher.class);
 
         when(webService.getBookInformation(anyString()))
                 .thenReturn(new Book("Of Mice And Men","0140177396","John Steinbeck"));
@@ -35,10 +48,6 @@ public class StockManagerTest {
                 .thenReturn(null);
 
         String isbn = "0140177396";
-        StockManager manager = new StockManager();
-
-        manager.setWebService(webService);
-        manager.setDatabaseService(databaseService);
         String result = manager.getLocatorCode(isbn);
 
         assertEquals("7396J4", result);
@@ -47,16 +56,9 @@ public class StockManagerTest {
     @Test
     public void databaseIsUsedIfWebServiceDataIsPresent() {
 
-        ISBNServiceBookFetcher webService = mock(ISBNServiceBookFetcher.class);
-        ISBNServiceBookFetcher databaseService = mock(ISBNServiceBookFetcher.class);
-
-        String isbn = "0140177396";
         when(databaseService.getBookInformation("0140177396")).thenReturn(new Book("abc","0140177396","abc"));
 
-
-        StockManager manager = new StockManager();
-        manager.setWebService(webService);
-        manager.setDatabaseService(databaseService);
+        String isbn = "0140177396";
         String result = manager.getLocatorCode(isbn);
 
         verify(databaseService, times(1)).getBookInformation("0140177396");
@@ -67,16 +69,10 @@ public class StockManagerTest {
     @Test
     public void webserviceIsUsedIfDataIsNotPresentInDatabase() {
 
-        ISBNServiceBookFetcher webService = mock(ISBNServiceBookFetcher.class);
-        ISBNServiceBookFetcher databaseService = mock(ISBNServiceBookFetcher.class);
-
         when(webService.getBookInformation("0140177396")).thenReturn(new Book("abc","0140177396","abc"));
         when(databaseService.getBookInformation("0140177396")).thenReturn(null);
 
-        StockManager manager = new StockManager();
         String isbn = "0140177396";
-        manager.setWebService(webService);
-        manager.setDatabaseService(databaseService);
         String result = manager.getLocatorCode(isbn);
 
         verify(databaseService, times(1)).getBookInformation("0140177396");
